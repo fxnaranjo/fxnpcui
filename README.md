@@ -9,6 +9,8 @@ This guide provides step-by-step instructions for deploying the ChatBot JWT Serv
 
 - **oc** (Kubernetes Version: v1.32+) - For Kubernetes deployments
 - **jq** - For JSON processing in scripts
+- **node** v24.12.0+
+- **npm** v11.16.0+
 
 ### Required Files
 
