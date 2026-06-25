@@ -1,0 +1,13 @@
+# Kubernetes Namespace for ChatBot Application
+# Provides logical isolation and resource management
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chatbot-app
+  labels:
+    name: chatbot-app
+    environment: production
+    app: chatbot
+  annotations:
+    description: "ChatBot JWT Service Application"

@@ -1,0 +1,57 @@
+# Kubernetes Service for ChatBot Application
+# Exposes the application pods within the cluster
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot-service
+  namespace: chatbot-app
+  labels:
+    app: chatbot
+    component: backend
+  annotations:
+    # Add annotations for service mesh, monitoring, etc.
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+spec:
+  # Service type - ClusterIP for internal access
+  # Change to LoadBalancer or NodePort for external access if not using Ingress/Route
+  type: ClusterIP
+  
+  # Session affinity (optional - useful for stateful sessions)
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 hours
+  
+  # Selector to match pods
+  selector:
+    app: chatbot
+    component: backend
+  
+  # Ports
+  ports:
+  - name: http
+    protocol: TCP
+    port: 8080        # Service port
+    targetPort: http  # Container port name from deployment
+    # nodePort: 30080 # Uncomment if using NodePort type
+
+---
+
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: chatbot-route
+  namespace: chatbot-app
+spec:
+  to:
+    kind: Service
+    name: chatbot-service
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+  wildcardPolicy: None
+

@@ -1,0 +1,143 @@
+# Kubernetes Deployment for ChatBot Application
+# Manages the application pods with health checks and resource limits
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot-deployment
+  namespace: chatbot-app
+  labels:
+    app: chatbot
+    component: backend
+    version: v1.0.0
+spec:
+  # Number of pod replicas for high availability
+  replicas: 2
+  
+  # Deployment strategy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  
+  # Pod selector
+  selector:
+    matchLabels:
+      app: chatbot
+      component: backend
+  
+  # Pod template
+  template:
+    metadata:
+      labels:
+        app: chatbot
+        component: backend
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:  
+      # Container specification
+      containers:
+      - name: chatbot
+        image: quay.io/fnaranjom/fxnpcui:latest
+        imagePullPolicy: Always
+        
+        # Container ports
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        
+        # Environment variables from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: chatbot-config
+        
+        # Environment variables from Secret
+        env:
+        - name: PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: chatbot-secrets
+              key: PRIVATE_KEY
+        - name: IBM_PUBLIC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: chatbot-secrets
+              key: IBM_PUBLIC_KEY
+        - name: WXO_ORCHESTRATION_ID
+          valueFrom:
+            secretKeyRef:
+              name: chatbot-secrets
+              key: WXO_ORCHESTRATION_ID
+        - name: WXO_HOST_URL
+          valueFrom:
+            secretKeyRef:
+              name: chatbot-secrets
+              key: WXO_HOST_URL
+        - name: WXO_AGENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: chatbot-secrets
+              key: WXO_AGENT_ID
+        - name: WXO_AGENT_ENVIRONMENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: chatbot-secrets
+              key: WXO_AGENT_ENVIRONMENT_ID
+        
+        # Resource limits and requests
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        
+        # Liveness probe - checks if container is running
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Readiness probe - checks if container is ready to serve traffic
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Security context for the container
+        # OpenShift will automatically assign a UID from the namespace's range
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          capabilities:
+            drop:
+            - ALL
+        
+  
+      # Restart policy
+      restartPolicy: Always
+      
+      # DNS policy
+      dnsPolicy: ClusterFirst
+      
+      # Termination grace period
+      terminationGracePeriodSeconds: 30

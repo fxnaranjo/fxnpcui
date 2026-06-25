@@ -1,0 +1,23 @@
+# Kubernetes ConfigMap for ChatBot Application
+# Contains non-sensitive configuration values
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chatbot-config
+  namespace: chatbot-app
+  labels:
+    app: chatbot
+    component: config
+data:
+  # Node environment
+  NODE_ENV: "production"
+  
+  # Application port (OpenShift-friendly, non-privileged)
+  PORT: "8080"
+  
+  # Logging level (optional)
+  LOG_LEVEL: "info"
+  
+  # Application name
+  APP_NAME: "ChatBot JWT Service"

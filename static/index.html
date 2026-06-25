@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TechParts Pro - Premium Computer Components</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    /**
+     * This is the function that is called when a new user id is needed.
+     */
+    function getUserId() {
+      let embed_user_id = sessionStorage.embed_user_id;
+      if (!embed_user_id) {
+        embed_user_id = Math.trunc(Math.random() * 1000000);
+        sessionStorage.embed_user_id = embed_user_id;
+      }
+      return embed_user_id;
+    }
+
+    /**
+    * Fetches a new JWT identity token from the backend.
+    * In production, this should call your secure server endpoint.
+    */
+    async function getIdentityToken() {
+      try {
+        const userId = getUserId();
+        const response = await fetch(`/createJWT?user_id=${userId}`, {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          console.error(`[wxO Secure Embed] Failed to fetch JWT: ${response.status} ${response.statusText}`);
+          return;
+        }
+
+        const token = await response.text();
+
+        if (!token) {
+          console.error("[wxO Secure Embed] Empty JWT token received.");
+          return;
+        }
+
+        window.wxOConfiguration.token = token;
+        console.log("[wxO Secure Embed] Token fetched successfully.");
+      } catch (error) {
+        console.error("[wxO Secure Embed] Error fetching identity token:", error);
+      }
+    }
+
+    /**
+     * Fetch Watson Orchestrate configuration from backend
+     * Configuration values are stored in Kubernetes secrets
+     */
+    async function loadConfiguration() {
+      try {
+        const response = await fetch('/config');
+        if (!response.ok) {
+          console.error('[wxO Config] Failed to fetch configuration:', response.status);
+          return null;
+        }
+        return await response.json();
+      } catch (error) {
+        console.error('[wxO Config] Error fetching configuration:', error);
+        return null;
+      }
+    }
+
+    /**
+     * Initialize Watson Orchestrate with configuration from backend
+     */
+    async function initializeWxO() {
+      // Fetch configuration from backend
+      const config = await loadConfiguration();
+      
+      if (!config) {
+        console.error('[wxO Config] Failed to load configuration');
+        return;
+      }
+
+      // Set up wxO configuration object
+      window.wxOConfiguration = {
+        orchestrationID: config.orchestrationID,
+        hostURL: config.hostURL,
+        rootElementID: "root",
+        chatOptions: {
+          agentId: config.agentId,
+          agentEnvironmentId: config.agentEnvironmentId,
+        }
+      };
+
+      console.log('[wxO Config] Configuration loaded successfully');
+
+      // Get identity token and load wxO script
+      await getIdentityToken();
+      
+      const script = document.createElement("script");
+      script.src = `${window.wxOConfiguration.hostURL}/wxochat/wxoLoader.js?embed=true`;
+      script.addEventListener("load", function () {
+        wxoLoader.init();
+      });
+      document.head.appendChild(script);
+    }
+
+    // Initialize when page loads
+    initializeWxO();
+  </script>
+</head>
+
+<body>
+  <!-- Animated background -->
+  <div class="bg-animation">
+    <div class="grid-overlay"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <div class="glow-orb glow-orb-3"></div>
+  </div>
+
+  <!-- Mount node for the chat -->
+  <div id="root"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-container">
+      <div class="logo">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="url(#gradient)" opacity="0.2"/>
+          <rect width="40" height="40" rx="8" stroke="url(#gradient)" stroke-width="2"/>
+          <path d="M12 20L18 14L24 20L30 14" stroke="url(#gradient)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="20" cy="26" r="2" fill="#00ff88"/>
+          <defs>
+            <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
+              <stop offset="0%" stop-color="#00ff88"/>
+              <stop offset="100%" stop-color="#00d4ff"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="logo-text">TECHPARTS<span class="logo-accent">.PRO</span></span>
+      </div>
+      <nav class="nav">
+        <a href="#" class="nav-link active">
+          <span class="nav-icon">▸</span> HOME
+        </a>
+        <a href="#products" class="nav-link">
+          <span class="nav-icon">▸</span> PRODUCTS
+        </a>
+        <a href="#deals" class="nav-link">
+          <span class="nav-icon">▸</span> DEALS
+        </a>
+        <a href="#support" class="nav-link">
+          <span class="nav-icon">▸</span> SUPPORT
+        </a>
+      </nav>
+      <div class="header-actions">
+        <button class="btn-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 12L17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="btn-icon cart">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M1 1H3L3.4 3M5 11H15L19 3H3.4M5 11L3.4 3M5 11L3 15H17M7 18C7 18.5523 6.55228 19 6 19C5.44772 19 5 18.5523 5 18C5 17.4477 5.44772 17 6 17C6.55228 17 7 17.4477 7 18ZM17 18C17 18.5523 16.5523 19 16 19C15.4477 19 15 18.5523 15 18C15 17.4477 15.4477 17 16 17C16.5523 17 17 17.4477 17 18Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="cart-badge">3</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        SYSTEM ONLINE FXN
+      </div>
+      <h1 class="hero-title">
+        BUILD YOUR
+        <span class="gradient-text">DREAM MACHINE</span>
+      </h1>
+      <p class="hero-subtitle">
+        <span class="typing-effect">Premium components. Unbeatable performance. Zero compromise.</span><br>
+        <span class="typing-effect">Demo Site for IBM DataPower Interact Gateway</span>
+      </p>
+      <div class="hero-buttons">
+        <button class="btn btn-primary">
+          <span>SHOP NOW</span>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="btn btn-secondary">
+          <span>VIEW DEALS</span>
+        </button>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-value">50K<span class="stat-plus">+</span></div>
+        <div class="stat-label">PRODUCTS</div>
+        <div class="stat-bar"></div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">24<span class="stat-separator">/</span>7</div>
+        <div class="stat-label">SUPPORT</div>
+        <div class="stat-bar"></div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">99.9<span class="stat-percent">%</span></div>
+        <div class="stat-label">UPTIME</div>
+        <div class="stat-bar"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Categories -->
+  <section class="categories" id="products">
+    <h2 class="section-title">
+      <span class="title-line"></span>
+      SHOP BY CATEGORY
+      <span class="title-line"></span>
+    </h2>
+    <div class="category-grid">
+      <div class="category-card">
+        <div class="card-glow"></div>
+        <div class="category-icon">🎮</div>
+        <h3>GRAPHICS CARDS</h3>
+        <p>Latest GPUs from NVIDIA & AMD</p>
+        <div class="category-link">
+          BROWSE <span class="arrow">→</span>
+        </div>
+      </div>
+      <div class="category-card">
+        <div class="card-glow"></div>
+        <div class="category-icon">⚡</div>
+        <h3>PROCESSORS</h3>
+        <p>Intel & AMD CPUs for every build</p>
+        <div class="category-link">
+          BROWSE <span class="arrow">→</span>
+        </div>
+      </div>
+      <div class="category-card">
+        <div class="card-glow"></div>
+        <div class="category-icon">💾</div>
+        <h3>MEMORY & STORAGE</h3>
+        <p>RAM, SSDs, and HDDs</p>
+        <div class="category-link">
+          BROWSE <span class="arrow">→</span>
+        </div>
+      </div>
+      <div class="category-card">
+        <div class="card-glow"></div>
+        <div class="category-icon">🔌</div>
+        <h3>MOTHERBOARDS</h3>
+        <p>Premium boards for gaming & work</p>
+        <div class="category-link">
+          BROWSE <span class="arrow">→</span>
+        </div>
+      </div>
+      <div class="category-card">
+        <div class="card-glow"></div>
+        <div class="category-icon">🌡️</div>
+        <h3>COOLING</h3>
+        <p>Air & liquid cooling solutions</p>
+        <div class="category-link">
+          BROWSE <span class="arrow">→</span>
+        </div>
+      </div>
+      <div class="category-card">
+        <div class="card-glow"></div>
+        <div class="category-icon">⚙️</div>
+        <h3>POWER SUPPLIES</h3>
+        <p>Reliable PSUs for stable power</p>
+        <div class="category-link">
+          BROWSE <span class="arrow">→</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Products -->
+  <section class="products" id="deals">
+    <h2 class="section-title">
+      <span class="title-line"></span>
+      HOT DEALS THIS WEEK
+      <span class="title-line"></span>
+    </h2>
+    <div class="product-grid">
+      <div class="product-card">
+        <div class="card-glow"></div>
+        <div class="product-badge discount">-25%</div>
+        <div class="product-image">🎮</div>
+        <div class="product-specs">
+          <span class="spec-tag">16GB GDDR6X</span>
+          <span class="spec-tag">RAY TRACING</span>
+        </div>
+        <h3 class="product-name">RTX 4080 SUPER</h3>
+        <p class="product-desc">Next-gen gaming performance</p>
+        <div class="product-price">
+          <span class="price-old">$1,199</span>
+          <span class="price-new">$899</span>
+        </div>
+        <button class="btn-add-cart">
+          <span>ADD TO CART</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="product-card featured">
+        <div class="card-glow"></div>
+        <div class="product-badge hot">HOT</div>
+        <div class="product-image">⚡</div>
+        <div class="product-specs">
+          <span class="spec-tag">16-CORE</span>
+          <span class="spec-tag">5.7GHZ</span>
+        </div>
+        <h3 class="product-name">AMD RYZEN 9 7950X</h3>
+        <p class="product-desc">Ultimate processing power</p>
+        <div class="product-price">
+          <span class="price-new">$549</span>
+        </div>
+        <button class="btn-add-cart">
+          <span>ADD TO CART</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="product-card">
+        <div class="card-glow"></div>
+        <div class="product-badge discount">-15%</div>
+        <div class="product-image">💾</div>
+        <div class="product-specs">
+          <span class="spec-tag">2TB NVME</span>
+          <span class="spec-tag">7450MB/S</span>
+        </div>
+        <h3 class="product-name">SAMSUNG 990 PRO</h3>
+        <p class="product-desc">Lightning-fast storage</p>
+        <div class="product-price">
+          <span class="price-old">$199</span>
+          <span class="price-new">$169</span>
+        </div>
+        <button class="btn-add-cart">
+          <span>ADD TO CART</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="product-card">
+        <div class="card-glow"></div>
+        <div class="product-badge new">NEW</div>
+        <div class="product-image">🔌</div>
+        <div class="product-specs">
+          <span class="spec-tag">DDR5</span>
+          <span class="spec-tag">PCIE 5.0</span>
+        </div>
+        <h3 class="product-name">ASUS ROG STRIX Z790</h3>
+        <p class="product-desc">Premium gaming platform</p>
+        <div class="product-price">
+          <span class="price-new">$399</span>
+        </div>
+        <button class="btn-add-cart">
+          <span>ADD TO CART</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="support">
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="feature-icon-wrapper">
+          <div class="feature-icon">🚚</div>
+        </div>
+        <h3>FREE SHIPPING</h3>
+        <p>On orders over $99</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon-wrapper">
+          <div class="feature-icon">🔒</div>
+        </div>
+        <h3>SECURE PAYMENT</h3>
+        <p>100% protected transactions</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon-wrapper">
+          <div class="feature-icon">↩️</div>
+        </div>
+        <h3>EASY RETURNS</h3>
+        <p>30-day return policy</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon-wrapper">
+          <div class="feature-icon">💬</div>
+        </div>
+        <h3>24/7 SUPPORT</h3>
+        <p>Expert help anytime</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>TECHPARTS.PRO</h4>
+        <p>Your trusted source for premium computer components since 2020.</p>
+        <div class="social-links">
+          <a href="#" class="social-link">TW</a>
+          <a href="#" class="social-link">FB</a>
+          <a href="#" class="social-link">IG</a>
+          <a href="#" class="social-link">YT</a>
+        </div>
+      </div>
+      <div class="footer-section">
+        <h4>SHOP</h4>
+        <a href="#">Graphics Cards</a>
+        <a href="#">Processors</a>
+        <a href="#">Memory</a>
+        <a href="#">Storage</a>
+      </div>
+      <div class="footer-section">
+        <h4>SUPPORT</h4>
+        <a href="#">Contact Us</a>
+        <a href="#">Shipping Info</a>
+        <a href="#">Returns</a>
+        <a href="#">FAQ</a>
+      </div>
+      <div class="footer-section">
+        <h4>COMPANY</h4>
+        <a href="#">About Us</a>
+        <a href="#">Careers</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 TechParts Pro. All rights reserved.</p>
+      <p class="ai-badge">
+        <span class="pulse-dot-small"></span>
+        Powered by IBM watsonx AI
+      </p>
+    </div>
+  </footer>
+</body>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --bg-primary: #0a0e1a;
+    --bg-secondary: #0f1420;
+    --bg-card: #151b2b;
+    --accent-cyan: #00d4ff;
+    --accent-green: #00ff88;
+    --accent-purple: #a855f7;
+    --text-primary: #ffffff;
+    --text-secondary: #8b92a7;
+    --border-color: rgba(0, 212, 255, 0.2);
+  }
+
+  body {
+    font-family: 'Rajdhani', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Animated Background */
+  .bg-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: gridMove 20s linear infinite;
+  }
+
+  @keyframes gridMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(50px, 50px); }
+  }
+
+  .glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.3;
+    animation: float 20s ease-in-out infinite;
+  }
+
+  .glow-orb-1 {
+    width: 400px;
+    height: 400px;
+    background: var(--accent-cyan);
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+  }
+
+  .glow-orb-2 {
+    width: 300px;
+    height: 300px;
+    background: var(--accent-green);
+    top: 50%;
+    right: 10%;
+    animation-delay: 7s;
+  }
+
+  .glow-orb-3 {
+    width: 350px;
+    height: 350px;
+    background: var(--accent-purple);
+    bottom: 10%;
+    left: 50%;
+    animation-delay: 14s;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(50px, -50px) scale(1.1); }
+    66% { transform: translate(-50px, 50px) scale(0.9); }
+  }
+
+  /* Header */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10, 14, 26, 0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .header-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 1.25rem;
+    letter-spacing: 2px;
+  }
+
+  .logo-accent {
+    color: var(--accent-cyan);
+  }
+
+  .nav {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .nav-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    transition: all 0.3s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nav-icon {
+    color: var(--accent-cyan);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .nav-link:hover .nav-icon,
+  .nav-link.active .nav-icon {
+    opacity: 1;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    color: var(--accent-cyan);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .btn-icon {
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid var(--border-color);
+    color: var(--accent-cyan);
+    cursor: pointer;
+    padding: 0.6rem;
+    border-radius: 8px;
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .btn-icon:hover {
+    background: rgba(0, 212, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .cart-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+    color: var(--bg-primary);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-family: 'Orbitron', sans-serif;
+  }
+
+  /* Hero Section */
+  .hero {
+    padding: 8rem 2rem 5rem;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    padding: 0.5rem 1.5rem;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--accent-green);
+    margin-bottom: 2rem;
+    font-family: 'Orbitron', sans-serif;
+  }
+
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+  }
+
+  .hero-content {
+    max-width: 900px;
+    margin: 0 auto 4rem;
+  }
+
+  .hero-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 4.5rem;
+    font-weight: 900;
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
+    letter-spacing: 3px;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: block;
+  }
+
+  .hero-subtitle {
+    font-size: 1.4rem;
+    color: var(--text-secondary);
+    margin-bottom: 3rem;
+    font-weight: 400;
+  }
+
+  .typing-effect {
+    border-right: 2px solid var(--accent-cyan);
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    50% { border-color: transparent; }
+  }
+
+  .hero-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 1rem 2.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    letter-spacing: 1px;
+    font-family: 'Orbitron', sans-serif;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+    color: var(--bg-primary);
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 40px rgba(0, 212, 255, 0.5);
+  }
+
+  .btn-secondary {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--accent-cyan);
+    border: 2px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: var(--accent-cyan);
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 4rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    text-align: center;
+    position: relative;
+  }
+
+  .stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3rem;
+    font-weight: 900;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-plus, .stat-separator, .stat-percent {
+    color: var(--accent-cyan);
+  }
+
+  .stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    font-weight: 600;
+  }
+
+  .stat-bar {
+    width: 100%;
+    height: 2px;
+    background: rgba(0, 212, 255, 0.2);
+    margin-top: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, var(--accent-cyan));
+    animation: scan 2s ease-in-out infinite;
+  }
+
+  @keyframes scan {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(300%); }
+  }
+
+  /* Sections */
+  .section-title {
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: 4rem;
+    color: var(--text-primary);
+    letter-spacing: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+  }
+
+  .title-line {
+    width: 100px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+  }
+
+  .categories, .products, .features {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 5rem 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Category Grid */
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+
+  .category-card {
+    background: var(--bg-card);
+    padding: 2.5rem;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    transition: all 0.4s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  .category-card:hover .card-glow {
+    opacity: 1;
+  }
+
+  .category-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--accent-cyan);
+    box-shadow: 0 20px 60px rgba(0, 212, 255, 0.2);
+  }
+
+  .category-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.5));
+  }
+
+  .category-card h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+  }
+
+  .category-card p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+  }
+
+  .category-link {
+    color: var(--accent-cyan);
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .arrow {
+    transition: transform 0.3s;
+  }
+
+  .category-card:hover .arrow {
+    transform: translateX(5px);
+  }
+
+  /* Product Grid */
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+
+  .product-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.4s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .product-card.featured {
+    border-color: var(--accent-green);
+  }
+
+  .product-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--accent-cyan);
+    box-shadow: 0 20px 60px rgba(0, 212, 255, 0.3);
+  }
+
+  .product-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-family: 'Orbitron', sans-serif;
+    z-index: 2;
+  }
+
+  .product-badge.discount {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+    color: white;
+  }
+
+  .product-badge.hot {
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+    color: var(--bg-primary);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .product-badge.new {
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+    color: white;
+  }
+
+  .product-image {
+    font-size: 5rem;
+    text-align: center;
+    margin: 1.5rem 0;
+    filter: drop-shadow(0 0 30px rgba(0, 212, 255, 0.5));
+  }
+
+  .product-specs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .spec-tag {
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid var(--border-color);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    letter-spacing: 1px;
+  }
+
+  .product-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+  }
+
+  .product-desc {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .product-price {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .price-old {
+    color: var(--text-secondary);
+    text-decoration: line-through;
+    font-size: 1rem;
+  }
+
+  .price-new {
+    color: var(--accent-green);
+    font-size: 2rem;
+    font-weight: 900;
+    font-family: 'Orbitron', sans-serif;
+  }
+
+  .btn-add-cart {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 255, 136, 0.1));
+    color: var(--accent-cyan);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    letter-spacing: 1px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+  }
+
+  .btn-add-cart:hover {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+    color: var(--bg-primary);
+    border-color: transparent;
+    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+    transform: translateY(-2px);
+  }
+
+  /* Features */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 3rem;
+  }
+
+  .feature {
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .feature-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: rgba(0, 212, 255, 0.1);
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .feature:hover .feature-icon-wrapper {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+    transform: scale(1.1);
+  }
+
+  .feature-icon {
+    font-size: 2.5rem;
+  }
+
+  .feature h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+  }
+
+  .feature p {
+    color: var(--text-secondary);
+  }
+
+  /* Footer */
+  .footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    padding: 4rem 2rem 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .footer-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 3rem;
+    margin-bottom: 3rem;
+  }
+
+  .footer-section h4 {
+    font-family: 'Orbitron', sans-serif;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: var(--accent-cyan);
+  }
+
+  .footer-section a {
+    display: block;
+    color: var(--text-secondary);
+    text-decoration: none;
+    margin-bottom: 0.75rem;
+    transition: color 0.3s;
+    font-size: 0.95rem;
+  }
+
+  .footer-section a:hover {
+    color: var(--accent-cyan);
+    padding-left: 5px;
+  }
+
+  .footer-section p {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-size: 0.95rem;
+  }
+
+  .social-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .social-link {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-cyan);
+    font-weight: 700;
+    font-size: 0.8rem;
+    transition: all 0.3s;
+    font-family: 'Orbitron', sans-serif;
+  }
+
+  .social-link:hover {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    transform: translateY(-3px);
+  }
+
+  .footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .ai-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--accent-green);
+    font-weight: 600;
+  }
+
+  .pulse-dot-small {
+    width: 6px;
+    height: 6px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .nav {
+      display: none;
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+    }
+
+    .section-title {
+      font-size: 2rem;
+      flex-direction: column;
+    }
+
+    .title-line {
+      width: 50px;
+    }
+
+    .header-container {
+      padding: 1rem;
+    }
+
+    .hero {
+      padding: 5rem 1rem 3rem;
+    }
+
+    .hero-stats {
+      gap: 2rem;
+    }
+
+    .footer-bottom {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+</style>
+
+</html>

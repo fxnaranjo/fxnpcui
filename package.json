@@ -1,0 +1,27 @@
+{
+  "name": "express-app",
+  "version": "1.0.0",
+  "description": "A simple Express web application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "k8s:deploy": "kubectl apply -f k8s/namespace.yaml && kubectl apply -f k8s/configmap.yaml && kubectl apply -f k8s/deployment.yaml && kubectl apply -f k8s/service.yaml",
+    "k8s:delete": "kubectl delete -f k8s/"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2",
+     "cookie-parser": "1.4.7",
+    "cors":"2.8.6",
+    "uuid":"14.0.0",
+    "jsonwebtoken":"9.0.3",
+    "node-rsa":"2.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+   
+
+  }
+}

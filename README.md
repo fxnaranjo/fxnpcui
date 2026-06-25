@@ -7,8 +7,7 @@ This guide provides step-by-step instructions for deploying the ChatBot JWT Serv
 
 ### Required Tools
 
-- **Docker** (v20.10+) - For building container images
-- **kubectl** (v1.24+) - For Kubernetes deployments
+- **oc** (Kubernetes Version: v1.32+) - For Kubernetes deployments
 - **jq** - For JSON processing in scripts
 
 ### Required Files
