@@ -75,7 +75,7 @@ export WXO_AGENT_ID=""
 
 export WXO_AGENT_ENVIRONMENT_ID=""
 
--- replace keys/jwtRS256.key and keys/ibmPublic.key.pub according to your environment
+-- REPLACE or ADD keys/jwtRS256.key and keys/ibmPublic.key.pub according to your environment
 
 RUN: ./scripts/create-k8s-secret.sh
 
